@@ -6,3 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+piston_window = "0.124.0"
+vecmath = "1.0.0"
+camera_controllers = "0.32.0"
+gfx = "0.18.0"
+gfx_device_gl = "0.16.2"
+shader_version = "0.7.0"

@@ -112,6 +112,7 @@ const FRAGMENT_SRC: &'static str = r#"
     }
 "#;
 
+#[allow(dead_code)]
 pub enum Activation {
     SIN,
     TANH,

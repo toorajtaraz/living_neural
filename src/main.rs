@@ -25,7 +25,6 @@ fn main() {
     use glium::index::PrimitiveType;
     use glium::Surface;
     use glutin::dpi::LogicalSize;
-    let img = buffer_initializer::new_center_top(WIDTH, HEIGHT);
 
     let points = vec![
         Vertex::new(-1.0, -1.0),
@@ -59,19 +58,13 @@ fn main() {
     )
     .unwrap();
 
-    // let mut animator = -0.5f32;
-    let image_dimensions = img.dimensions();
-    let u_plane =
-        glium::texture::RawImage2d::from_raw_rgba_reversed(&img.into_raw(), image_dimensions);
-    let u_plane_base = glium::texture::SrgbTexture2d::new(&display, u_plane).unwrap();
-    let dest_texture = glium::Texture2d::empty_with_format(
-        &display,
-        glium::texture::UncompressedFloatFormat::U8U8U8U8,
-        glium::texture::MipmapsOption::NoMipmap,
+    let u_plane_base = buffer_initializer::new_as_texture(
+        buffer_initializer::InitMode::CENTERTOP,
         WIDTH,
         HEIGHT,
-    )
-    .unwrap();
+        &display,
+    );
+    let dest_texture = buffer_initializer::new_empty_texture(WIDTH, HEIGHT, &display);
     dest_texture.as_surface().clear_color(0.0, 0.0, 0.0, 1.0);
     // u_kernel: [
     //     [0.037, 0.43, -0.737],

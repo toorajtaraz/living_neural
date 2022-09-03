@@ -6,8 +6,10 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+clap = { version = "3.2.20", features = ["derive"] }
 glium = "0.32.1"
 image = "0.24.3"
+palette = "0.6.1"
 pallete = "1.1.0"
 rand = "0.8.5"
 rayon = "1.5.3"

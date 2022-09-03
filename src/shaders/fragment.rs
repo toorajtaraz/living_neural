@@ -1,3 +1,14 @@
+const ACTIVATION_WORMS: &'static str = r#"
+
+float inverse_gaussian(float x) {
+  return -1./pow(2., (0.6*pow(x, 2.)))+1.;
+}
+
+float activation(float x) {
+  return inverse_gaussian(x);
+}	
+
+"#;
 const ACTIVATION_WAVES: &'static str = r#"
 
 float activation(float x) {
@@ -130,6 +141,7 @@ pub enum Activation {
     GAMEOFLIFE,
     INVERSEGAUSSIAN,
     WAVES,
+    WORMS,
     CUSTOM,
 }
 
@@ -171,6 +183,9 @@ pub fn get_fragment_shader(
         }
         Activation::WAVES => {
             fragment_src = fragment_src.replace("ACTIVATION_SRC", ACTIVATION_WAVES);
+        }
+        Activation::WORMS => {
+            fragment_src = fragment_src.replace("ACTIVATION_SRC", ACTIVATION_WORMS);
         }
         Activation::CUSTOM => {
             fragment_src = fragment_src.replace(

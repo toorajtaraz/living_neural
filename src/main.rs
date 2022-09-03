@@ -2,6 +2,7 @@
 extern crate glium;
 
 mod buffer_initializer;
+mod cmd_handler;
 mod kernels;
 mod shaders;
 
@@ -24,19 +25,24 @@ fn main() {
     use glium::Surface;
     use glutin::dpi::LogicalSize;
 
-    let mut width: u32 = 500;
-    let mut height: u32 = 500;
-    let mut fps: f32 = 24.0;
-    let mut kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
-    let mut single_pixel = [1.0f32 / width as f32, 1.0 / height as f32];
-    let mut color = [0.4f32, 0.0, 0.6, 1.0];
-    let mut skip = 4;
+    let conf = cmd_handler::get_args();
+    let width: u32;
+    let height: u32;
+    let fps: f32;
+    let kernel;
+    let color;
+    let skip;
 
-    let fragment_src = shaders::fragment::get_fragment_shader(
-        shaders::fragment::Activation::INVERSEGAUSSIAN,
-        false,
-        None,
-    );
+    width = conf.width;
+    height = conf.height;
+    fps = conf.fps;
+    kernel = conf.kernel;
+    color = conf.color;
+    skip = conf.skip;
+
+    let mut single_pixel = [1.0f32 / width as f32, 1.0 / height as f32];
+
+    let fragment_src = conf.fragment_src;
 
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new()
@@ -87,17 +93,16 @@ fn main() {
                     return;
                 }
                 glutin::event::WindowEvent::Resized(size) => {
-                    height = size.height;
-                    width = size.width;
-                    single_pixel = [1.0f32 / width as f32, 1.0 / height as f32];
+                    single_pixel = [1.0f32 / size.width as f32, 1.0 / size.height as f32];
 
                     u_plane_base = buffer_initializer::new_as_texture(
                         buffer_initializer::InitMode::RANDOM,
-                        width,
-                        height,
+                        size.width,
+                        size.height,
                         &display,
                     );
-                    dest_texture = buffer_initializer::new_empty_texture(width, height, &display);
+                    dest_texture =
+                        buffer_initializer::new_empty_texture(size.width, size.height, &display);
                     dest_texture.as_surface().clear_color(0.0, 0.0, 0.0, 1.0);
 
                     is_first = true;

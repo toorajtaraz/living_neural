@@ -1,6 +1,8 @@
 #[macro_use]
 extern crate glium;
 
+mod buffer_initializer;
+
 const HEIGHT: u32 = 500;
 const WIDTH: u32 = 500;
 
@@ -22,24 +24,7 @@ fn main() {
     use glium::index::PrimitiveType;
     use glium::Surface;
     use glutin::dpi::LogicalSize;
-    use image::{Rgba, RgbaImage};
-    use rand::prelude::*;
-    use std::io::Cursor;
-    let mut rng = rand::thread_rng();
-    let mut img = RgbaImage::new(WIDTH, HEIGHT);
-
-    // for x in 0..WIDTH {
-    //     for y in 0..HEIGHT {
-    //         let t = rng.gen::<u8>();
-    //         img.put_pixel(x, y, Rgba([t, t, t, t]));
-    //     }
-    // }
-    for x in 0..WIDTH {
-        for y in 0..HEIGHT {
-            img.put_pixel(x, y, Rgba([0, 0, 0, 0]));
-        }
-    }
-    img.put_pixel(2, HEIGHT - 1, Rgba([255, 255, 255, 255]));
+    let img = buffer_initializer::new_center_top(WIDTH, HEIGHT);
     let vertex_shader_src = r#"
     #version 450
     in vec2 points;
@@ -63,36 +48,7 @@ fn main() {
     uniform bool u_do_calc;
     uniform sampler2D u_plane_out;
     vec2 get_point(vec2 point, vec2 offset) {
-        // vec2 temp = point + u_single_pixel * offset;
-        // if (temp.x < -1.) {
-        //     if (temp.y < -1.) {
-        //         return vec2(2.0 + temp.x, 2.0 + temp.y);
-        //     } else if (temp.y > 1.) {
-        //         return vec2(2.0 + temp.x,  -2.0 + temp.y);
-        //     } else {
-        //         return vec2(2.0 + temp.x, temp.y);
-        //     }
-        // } else if (temp.x > 1.) {
-        //     if (temp.y < -1.) {
-        //         return vec2(-2.0 + temp.x, 2.0 + temp.y);
-        //     } else if (temp.y > 1.) {
-        //         return vec2(-2.0 + temp.x, -2.0 + temp.y);
-        //     } else {
-        //         return vec2(-2.0 + temp.x, temp.y);
-        //     }
-        // } else {
-        //     if (temp.y < -1.) {
-        //         return vec2(temp.x, 2.0 + temp.y);
-        //     } else if (temp.y > 1.) {
-        //         return vec2(temp.x, -2.0 + temp.y);
-        //     } else {
-        //         return point;
-        //     }
-        // }
-        // return fract(point + u_single_pixel * offset);
-        return mod(point + u_single_pixel * offset, 1.0);
-        // vec2 val = point + u_single_pixel * offset;
-        // return val - floor(val);
+        return fract(point + u_single_pixel * offset);
     }
 
     float inverse_gaussian(float x) {
@@ -141,11 +97,7 @@ fn main() {
                     + texture(u_plane, get_point(v_text_points, vec2( 0., 1.))).a * u_kernel[1][2]
                     + texture(u_plane, get_point(v_text_points, vec2(-1., 1.))).a * u_kernel[2][2];
             float activated = activation(conv_res_a);
-            // float test = texture2D(u_plane, v_text_points).a;
-            // float test = texture(u_plane, v_text_points).a;
-            // color = texture(u_plane, v_text_points);
             color = vec4(activated, activated, activated, activated);
-            // color = texture(u_plane, v_text_points);
         } else {
             float x = texture(u_plane, v_text_points).a;
 			color = vec4(x, x, x, x) * u_color_mask;
@@ -181,14 +133,6 @@ fn main() {
             .unwrap();
 
     // let mut animator = -0.5f32;
-    let _image = image::load(
-        Cursor::new(&include_bytes!(
-            "/home/toorajtaraz/Documents/projects/rust-projects/living_neural/assets/1.png"
-        )),
-        image::ImageFormat::Png,
-    )
-    .unwrap()
-    .to_rgba8();
     let image_dimensions = img.dimensions();
     let u_plane =
         glium::texture::RawImage2d::from_raw_rgba_reversed(&img.into_raw(), image_dimensions);

@@ -2,6 +2,7 @@
 extern crate glium;
 
 mod buffer_initializer;
+mod kernels;
 mod shaders;
 
 const HEIGHT: u32 = 500;
@@ -52,42 +53,27 @@ fn main() {
     let program = glium::Program::from_source(
         &display,
         shaders::vertex::VERTEX_SRC,
-        shaders::fragment::get_fragment_shader(shaders::fragment::Activation::RULE30, true, None)
-            .as_str(),
+        shaders::fragment::get_fragment_shader(
+            shaders::fragment::Activation::INVERSEGAUSSIAN,
+            false,
+            None,
+        )
+        .as_str(),
         None,
     )
     .unwrap();
 
     let u_plane_base = buffer_initializer::new_as_texture(
-        buffer_initializer::InitMode::CENTERTOP,
+        buffer_initializer::InitMode::RANDOM,
         WIDTH,
         HEIGHT,
         &display,
     );
     let dest_texture = buffer_initializer::new_empty_texture(WIDTH, HEIGHT, &display);
     dest_texture.as_surface().clear_color(0.0, 0.0, 0.0, 1.0);
-    // u_kernel: [
-    //     [0.037, 0.43, -0.737],
-    //     [0.406, -0.321, -0.319],
-    //     [-0.458, 0.416, 0.478f32],
-    // ],
-    // u_kernel: [
-    //     [1., 1., 1.],
-    //     [1., 9., 1.],
-    //     [1.0, 1.0, 1.0f32],
-    // ],
-    // u_kernel: [
-    //     [0., 0., 0.],
-    //     [0., 0., 0.],
-    //     [1.0, 2.0, 4.0f32],
-    // ],
-    let kernel = [[0., 0., 0.], [0., 0., 0.], [1.0, 2.0, 4.0f32]];
 
-    // let kernel = [
-    //     [0.68, -0.90, 0.68],
-    //     [-0.9, -0.66, -0.90],
-    //     [0.68, -0.90, 0.68f32],
-    // ];
+    let kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
+
     let mut is_first: &bool = &true;
     let mut do_calc: &bool = &true;
     event_loop.run(move |ev, _, control_flow| {

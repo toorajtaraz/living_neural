@@ -34,7 +34,6 @@ fn main() {
             img.put_pixel(x, y, Rgba([t, t, t, t]));
         }
     }
-
     // for x in 0..WIDTH {
     //     for y in 0..HEIGHT {
     //         img.put_pixel(x, y, Rgba([0, 0, 0, 0]));
@@ -46,13 +45,14 @@ fn main() {
     in vec2 points;
     out vec2 v_text_points;
     void main() {
-        v_text_points = (points / 2.0 + 0.5);
+        v_text_points = (points / 2.0);
         // v_text_points = points;
         gl_Position = vec4(points, 1.0, 1.0);
     }
 "#;
     let fragment_shader_src = r#"
     #version 450
+    precision mediump float;
     in vec2 v_text_points;
     out vec4 color;
 
@@ -61,7 +61,7 @@ fn main() {
     uniform mat3 u_kernel;
     uniform sampler2D u_plane;
     uniform bool u_do_calc;
-
+    uniform sampler2D u_plane_out;
     vec2 get_point(vec2 point, vec2 offset) {
         // vec2 temp = point + u_single_pixel * offset;
         // if (temp.x < -1.) {
@@ -89,6 +89,7 @@ fn main() {
         //         return point;
         //     }
         // }
+        // return fract(point + u_single_pixel * offset);
         return mod(point + u_single_pixel * offset, 1.0);
         // vec2 val = point + u_single_pixel * offset;
         // return val - floor(val);
@@ -107,16 +108,21 @@ fn main() {
       return (exp(2.*x)-1.)/(exp(2.*x)+1.);
     }
 
-    float activation(float x) {
-      return tanh(x);
-    }
     // float activation(float x) {
-    //   return inverse_gaussian(x);
+    //   return tanh(x);
     // }
+    float activation(float x) {
+      return inverse_gaussian(x);
+    }
     // float activation(float x) {
     //     return x;
     // }
-
+    // float activation(float x) {
+    //   if (x == 3. || x == 11. || x == 12.){
+    //     return 1.;
+    //   }
+    //   return 0.;
+    // }	
     void main() {
         if (u_do_calc) {
             // float cur = texture(u_plane, get_point(v_text_points, vec2(0.0, 0.0))).a;
@@ -138,9 +144,11 @@ fn main() {
             // float test = texture2D(u_plane, v_text_points).a;
             // float test = texture(u_plane, v_text_points).a;
             // color = texture(u_plane, v_text_points);
-
             color = vec4(activated, activated, activated, activated);
             // color = texture(u_plane, v_text_points);
+        } else {
+            float x = texture(u_plane, v_text_points).a;
+			color = vec4(x, x, x, x) * u_color_mask;
         }
     }
 "#;
@@ -172,7 +180,7 @@ fn main() {
         glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
             .unwrap();
 
-    let mut animator = -0.5f32;
+    // let mut animator = -0.5f32;
     let _image = image::load(
         Cursor::new(&include_bytes!(
             "/home/toorajtaraz/Documents/projects/rust-projects/living_neural/assets/1.png"
@@ -184,7 +192,38 @@ fn main() {
     let image_dimensions = img.dimensions();
     let u_plane =
         glium::texture::RawImage2d::from_raw_rgba_reversed(&img.into_raw(), image_dimensions);
-    let mut u_plane = glium::texture::SrgbTexture2d::new(&display, u_plane).unwrap();
+    let u_plane_base = glium::texture::SrgbTexture2d::new(&display, u_plane).unwrap();
+    let dest_texture = glium::Texture2d::empty_with_format(
+        &display,
+        glium::texture::UncompressedFloatFormat::U8U8U8U8,
+        glium::texture::MipmapsOption::NoMipmap,
+        WIDTH,
+        HEIGHT,
+    )
+    .unwrap();
+    dest_texture.as_surface().clear_color(0.0, 0.0, 0.0, 1.0);
+    // u_kernel: [
+    //     [0.037, 0.43, -0.737],
+    //     [0.406, -0.321, -0.319],
+    //     [-0.458, 0.416, 0.478f32],
+    // ],
+    // u_kernel: [
+    //     [1., 1., 1.],
+    //     [1., 9., 1.],
+    //     [1.0, 1.0, 1.0f32],
+    // ],
+    // u_kernel: [
+    //     [0., 0., 0.],
+    //     [0., 0., 0.],
+    //     [1.0, 2.0, 4.0f32],
+    // ],
+    let kernel = [
+        [0.68, -0.90, 0.68],
+        [-0.9, -0.66, -0.90],
+        [0.68, -0.90, 0.68f32],
+    ];
+    let mut is_first: &bool = &true;
+    let mut do_calc: &bool = &true;
     event_loop.run(move |ev, _, control_flow| {
         match ev {
             glutin::event::Event::WindowEvent { event, .. } => match event {
@@ -201,50 +240,75 @@ fn main() {
             },
             _ => return,
         }
-        let uniforms = uniform! {
-            u_kernel: [
-                [0.037, 0.43, -0.737],
-                [0.406, -0.321, -0.319],
-                [-0.458, 0.416, 0.478f32],
-            ],
-            // u_kernel: [
-            //     [0.68, -0.90, 0.68],
-            //     [-0.9, -0.66, -0.90],
-            //     [0.68, -0.90, 0.68f32],
-            // ],
-            // u_kernel: [
-            //     [0., 0., 0.],
-            //     [0., 0., 0.],
-            //     [1.0, 2.0, 4.0f32],
-            // ],
-            u_do_calc: true,
-            u_color_mask: [1.0f32, 0.0, 0.0, 1.0],
-            u_single_pixel: [1.0f32/WIDTH as f32, 1.0/HEIGHT as f32],
-            u_plane : &u_plane,
+        let mut target_fb =
+            glium::framebuffer::SimpleFrameBuffer::new(&display, &dest_texture).unwrap();
+        if *is_first {
+            let uniforms = uniform! {
+                u_kernel: kernel,
+                u_do_calc: *do_calc,
+                u_color_mask: [1.0f32, 0.0, 0.0, 1.0],
+                u_single_pixel: [1.0f32/WIDTH as f32, 1.0/HEIGHT as f32],
+                u_plane : &u_plane_base,
 
-        };
-        let mut target = display.draw();
-        // target.clear_color(1.0, 0.0, 0.0, 1.0);
-        target
-            .draw(
-                &vertex_buffer,
-                &indices,
-                &program,
-                &uniforms,
-                &Default::default(),
-            )
-            .unwrap();
+            };
+            target_fb
+                .draw(
+                    &vertex_buffer,
+                    &indices,
+                    &program,
+                    &uniforms,
+                    &Default::default(),
+                )
+                .unwrap();
+            is_first = &false;
+            do_calc = &false;
+        } else {
+            let uniforms = uniform! {
+                u_kernel: kernel,
+                u_do_calc: *do_calc,
+                u_color_mask: [1.0f32, 0.0, 0.0, 1.0],
+                u_single_pixel: [1.0f32/WIDTH as f32, 1.0/HEIGHT as f32],
+                u_plane : &dest_texture,
 
-        target.finish().unwrap();
-        let image: glium::texture::RawImage2d<'_, u8> = display.read_front_buffer().unwrap();
-        u_plane = glium::texture::SrgbTexture2d::new(&display, image).unwrap();
-        let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(1116_666_667);
-        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
+            };
 
-        animator += 0.0002;
-        if animator > 0.5 {
-            animator = -0.5;
+            if *do_calc {
+                for _ in 0..4 {
+                    target_fb
+                        .draw(
+                            &vertex_buffer,
+                            &indices,
+                            &program,
+                            &uniforms,
+                            &Default::default(),
+                        )
+                        .unwrap();
+
+                    target_fb.fill(
+                        &dest_texture.as_surface(),
+                        glium::uniforms::MagnifySamplerFilter::Nearest,
+                    );
+                }
+                do_calc = &false;
+            } else {
+                let mut target = display.draw();
+                target
+                    .draw(
+                        &vertex_buffer,
+                        &indices,
+                        &program,
+                        &uniforms,
+                        &Default::default(),
+                    )
+                    .unwrap();
+
+                target.finish().unwrap();
+                do_calc = &true;
+            }
         }
+        // u_plane_next = Option::Some(&dest_texture);
+        let next_frame_time =
+            std::time::Instant::now() + std::time::Duration::from_nanos(6_666_667);
+        *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });
 }

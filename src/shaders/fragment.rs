@@ -1,3 +1,10 @@
+const ACTIVATION_WAVES: &'static str = r#"
+
+float activation(float x) {
+  return abs(1.2*x);
+}
+
+"#;
 const ACTIVATION_GAME_OF_LIFE: &'static str = r#"
 
     float activation(float x) {
@@ -122,6 +129,7 @@ pub enum Activation {
     IDENTITY,
     GAMEOFLIFE,
     INVERSEGAUSSIAN,
+    WAVES,
     CUSTOM,
 }
 
@@ -160,6 +168,9 @@ pub fn get_fragment_shader(
         }
         Activation::INVERSEGAUSSIAN => {
             fragment_src = fragment_src.replace("ACTIVATION_SRC", ACTIVATION_INVERSE_GAUSSIAN);
+        }
+        Activation::WAVES => {
+            fragment_src = fragment_src.replace("ACTIVATION_SRC", ACTIVATION_WAVES);
         }
         Activation::CUSTOM => {
             fragment_src = fragment_src.replace(

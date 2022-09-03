@@ -28,18 +28,18 @@ fn main() {
     let mut rng = rand::thread_rng();
     let mut img = RgbaImage::new(WIDTH, HEIGHT);
 
-    for x in 0..WIDTH {
-        for y in 0..HEIGHT {
-            let t = rng.gen::<u8>();
-            img.put_pixel(x, y, Rgba([t, t, t, t]));
-        }
-    }
     // for x in 0..WIDTH {
     //     for y in 0..HEIGHT {
-    //         img.put_pixel(x, y, Rgba([0, 0, 0, 0]));
+    //         let t = rng.gen::<u8>();
+    //         img.put_pixel(x, y, Rgba([t, t, t, t]));
     //     }
     // }
-    // img.put_pixel(2, HEIGHT - 1, Rgba([255, 255, 255, 255]));
+    for x in 0..WIDTH {
+        for y in 0..HEIGHT {
+            img.put_pixel(x, y, Rgba([0, 0, 0, 0]));
+        }
+    }
+    img.put_pixel(2, HEIGHT - 1, Rgba([255, 255, 255, 255]));
     let vertex_shader_src = r#"
     #version 450
     in vec2 points;
@@ -98,12 +98,12 @@ fn main() {
     float inverse_gaussian(float x) {
       return -1./pow(2., (0.6*pow(x, 2.)))+1.;
     }
-    // float activation(float x) {
-    //   if (x == 1. || x == 2. || x == 3.|| x == 4.){
-    //     return 1.;
-    //   }
-    //   return 0.;
-    // }
+    float activation(float x) {
+      if (x == 1. || x == 2. || x == 3.|| x == 4.){
+        return 1.;
+      }
+      return 0.;
+    }
     float tanh(float x) {
       return (exp(2.*x)-1.)/(exp(2.*x)+1.);
     }
@@ -111,9 +111,9 @@ fn main() {
     // float activation(float x) {
     //   return tanh(x);
     // }
-    float activation(float x) {
-      return inverse_gaussian(x);
-    }
+    // float activation(float x) {
+    //   return inverse_gaussian(x);
+    // }
     // float activation(float x) {
     //     return x;
     // }
@@ -125,11 +125,11 @@ fn main() {
     // }	
     void main() {
         if (u_do_calc) {
-            // float cur = texture(u_plane, get_point(v_text_points, vec2(0.0, 0.0))).a;
-            // if (cur != 0.) {
-            //     color = vec4(cur, cur, cur, cur);
-            //     return;
-            // }
+            float cur = texture(u_plane, get_point(v_text_points, vec2(0.0, 0.0))).a;
+            if (cur != 0.) {
+                color = vec4(cur, cur, cur, cur);
+                return;
+            }
             float conv_res_a =
                       texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
                     + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
@@ -217,11 +217,13 @@ fn main() {
     //     [0., 0., 0.],
     //     [1.0, 2.0, 4.0f32],
     // ],
-    let kernel = [
-        [0.68, -0.90, 0.68],
-        [-0.9, -0.66, -0.90],
-        [0.68, -0.90, 0.68f32],
-    ];
+    let kernel = [[0., 0., 0.], [0., 0., 0.], [1.0, 2.0, 4.0f32]];
+
+    // let kernel = [
+    //     [0.68, -0.90, 0.68],
+    //     [-0.9, -0.66, -0.90],
+    //     [0.68, -0.90, 0.68f32],
+    // ];
     let mut is_first: &bool = &true;
     let mut do_calc: &bool = &true;
     event_loop.run(move |ev, _, control_flow| {
@@ -266,14 +268,14 @@ fn main() {
             let uniforms = uniform! {
                 u_kernel: kernel,
                 u_do_calc: *do_calc,
-                u_color_mask: [1.0f32, 0.0, 0.0, 1.0],
+                u_color_mask: [0.4f32, 0.0, 0.6, 1.0],
                 u_single_pixel: [1.0f32/WIDTH as f32, 1.0/HEIGHT as f32],
                 u_plane : &dest_texture,
 
             };
 
             if *do_calc {
-                for _ in 0..4 {
+                for _ in 0..1 {
                     target_fb
                         .draw(
                             &vertex_buffer,
@@ -308,7 +310,7 @@ fn main() {
         }
         // u_plane_next = Option::Some(&dest_texture);
         let next_frame_time =
-            std::time::Instant::now() + std::time::Duration::from_nanos(6_666_667);
+            std::time::Instant::now() + std::time::Duration::from_nanos(26_666_667);
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
     });
 }

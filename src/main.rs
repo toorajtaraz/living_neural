@@ -2,6 +2,7 @@
 extern crate glium;
 
 mod buffer_initializer;
+mod shaders;
 
 const HEIGHT: u32 = 500;
 const WIDTH: u32 = 500;
@@ -25,85 +26,6 @@ fn main() {
     use glium::Surface;
     use glutin::dpi::LogicalSize;
     let img = buffer_initializer::new_center_top(WIDTH, HEIGHT);
-    let vertex_shader_src = r#"
-    #version 450
-    in vec2 points;
-    out vec2 v_text_points;
-    void main() {
-        v_text_points = (points / 2.0);
-        // v_text_points = points;
-        gl_Position = vec4(points, 1.0, 1.0);
-    }
-"#;
-    let fragment_shader_src = r#"
-    #version 450
-    precision mediump float;
-    in vec2 v_text_points;
-    out vec4 color;
-
-    uniform vec2 u_single_pixel;
-    uniform vec4 u_color_mask;
-    uniform mat3 u_kernel;
-    uniform sampler2D u_plane;
-    uniform bool u_do_calc;
-    uniform sampler2D u_plane_out;
-    vec2 get_point(vec2 point, vec2 offset) {
-        return fract(point + u_single_pixel * offset);
-    }
-
-    float inverse_gaussian(float x) {
-      return -1./pow(2., (0.6*pow(x, 2.)))+1.;
-    }
-    float activation(float x) {
-      if (x == 1. || x == 2. || x == 3.|| x == 4.){
-        return 1.;
-      }
-      return 0.;
-    }
-    float tanh(float x) {
-      return (exp(2.*x)-1.)/(exp(2.*x)+1.);
-    }
-
-    // float activation(float x) {
-    //   return tanh(x);
-    // }
-    // float activation(float x) {
-    //   return inverse_gaussian(x);
-    // }
-    // float activation(float x) {
-    //     return x;
-    // }
-    // float activation(float x) {
-    //   if (x == 3. || x == 11. || x == 12.){
-    //     return 1.;
-    //   }
-    //   return 0.;
-    // }	
-    void main() {
-        if (u_do_calc) {
-            float cur = texture(u_plane, get_point(v_text_points, vec2(0.0, 0.0))).a;
-            if (cur != 0.) {
-                color = vec4(cur, cur, cur, cur);
-                return;
-            }
-            float conv_res_a =
-                      texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1.,-1.))).a * u_kernel[2][0]
-                    + texture(u_plane, get_point(v_text_points, vec2( 1., 0.))).a * u_kernel[0][1]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0., 0.))).a * u_kernel[1][1]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1., 0.))).a * u_kernel[2][1]
-                    + texture(u_plane, get_point(v_text_points, vec2( 1., 1.))).a * u_kernel[0][2]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0., 1.))).a * u_kernel[1][2]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1., 1.))).a * u_kernel[2][2];
-            float activated = activation(conv_res_a);
-            color = vec4(activated, activated, activated, activated);
-        } else {
-            float x = texture(u_plane, v_text_points).a;
-			color = vec4(x, x, x, x) * u_color_mask;
-        }
-    }
-"#;
 
     let points = vec![
         Vertex::new(-1.0, -1.0),
@@ -128,9 +50,14 @@ fn main() {
     )
     .unwrap();
 
-    let program =
-        glium::Program::from_source(&display, vertex_shader_src, fragment_shader_src, None)
-            .unwrap();
+    let program = glium::Program::from_source(
+        &display,
+        shaders::vertex::VERTEX_SRC,
+        shaders::fragment::get_fragment_shader(shaders::fragment::Activation::RULE30, true, None)
+            .as_str(),
+        None,
+    )
+    .unwrap();
 
     // let mut animator = -0.5f32;
     let image_dimensions = img.dimensions();

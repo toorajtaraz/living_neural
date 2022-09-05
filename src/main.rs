@@ -23,7 +23,7 @@ fn main() {
     use glium::glutin;
     use glium::index::PrimitiveType;
     use glium::Surface;
-    use glutin::dpi::LogicalSize;
+    use glutin::dpi::PhysicalSize;
 
     let conf = cmd_handler::get_args();
     let width: u32;
@@ -47,7 +47,7 @@ fn main() {
     let event_loop = glutin::event_loop::EventLoop::new();
     let wb = glutin::window::WindowBuilder::new()
         .with_always_on_top(true)
-        .with_max_inner_size(LogicalSize::new(height, width))
+        .with_inner_size(PhysicalSize::new(height, width))
         .with_resizable(false);
     let cb = glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
@@ -107,6 +107,7 @@ fn main() {
 
                     is_first = true;
                     do_calc = true;
+                    return;
                 }
                 _ => return,
             },
@@ -125,26 +126,25 @@ fn main() {
                 u_do_calc: do_calc,
                 u_color_mask: color,
                 u_single_pixel: single_pixel,
-                u_plane : &u_plane_base,
-
+                u_plane : u_plane_base
+                            .sampled()
+                            .wrap_function(glium::uniforms::SamplerWrapFunction::Repeat),
             };
 
-            for _ in 0..skip {
-                target_fb
-                    .draw(
-                        &vertex_buffer,
-                        &indices,
-                        &program,
-                        &uniforms,
-                        &Default::default(),
-                    )
-                    .unwrap();
+            target_fb
+                .draw(
+                    &vertex_buffer,
+                    &indices,
+                    &program,
+                    &uniforms,
+                    &Default::default(),
+                )
+                .unwrap();
 
-                target_fb.fill(
-                    &dest_texture.as_surface(),
-                    glium::uniforms::MagnifySamplerFilter::Nearest,
-                );
-            }
+            target_fb.fill(
+                &dest_texture.as_surface(),
+                glium::uniforms::MagnifySamplerFilter::Linear,
+            );
             is_first = false;
             do_calc = false;
         } else {
@@ -153,8 +153,9 @@ fn main() {
                 u_do_calc: do_calc,
                 u_color_mask: color,
                 u_single_pixel: single_pixel,
-                u_plane : &dest_texture,
-
+                u_plane : dest_texture
+                            .sampled()
+                            .wrap_function(glium::uniforms::SamplerWrapFunction::Repeat),
             };
 
             if do_calc {
@@ -171,7 +172,7 @@ fn main() {
 
                     target_fb.fill(
                         &dest_texture.as_surface(),
-                        glium::uniforms::MagnifySamplerFilter::Nearest,
+                        glium::uniforms::MagnifySamplerFilter::Linear,
                     );
                 }
                 do_calc = false;

@@ -50,7 +50,6 @@ pub fn new_as_texture(
         glium::texture::RawImage2d::from_raw_rgba_reversed(&img.into_raw(), img_dimensions);
     glium::texture::SrgbTexture2d::new(display, img_raw).unwrap()
 }
-
 pub fn new_empty_texture(width: u32, height: u32, display: &glium::Display) -> glium::Texture2d {
     glium::Texture2d::empty_with_format(
         display,

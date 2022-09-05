@@ -1,6 +1,8 @@
 # Living Neural
 Living Neural implements the simplest form of a neural automata and renders the output using OpenGL.
 
+## Examples
+
 ## Usage
 ```bash
 Living Neural 0.1.0

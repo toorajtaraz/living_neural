@@ -1,6 +1,7 @@
 use crate::kernels;
 use crate::shaders;
 use clap::{App, Arg};
+use palette;
 use rand::prelude::*;
 
 #[derive(Default, Debug)]
@@ -58,12 +59,12 @@ pub fn get_args() -> Config {
                                .short('c')
                                .long("color")
                                .value_name("desired color name")
-                               .help("Sets the fg color.")
+                               .help("Sets the fg color. All the valid CSS3 colors are acceptable.")
                                .takes_value(true))
-                          .arg(Arg::with_name("color_by_code")
+                          .arg(Arg::with_name("color_by_value")
                                .short('C')
                                .long("COLOR")
-                               .value_name("desired color code")
+                               .value_name("desired color values. [R, G, B] => '[0.2, 0., 1.0]' each must be between 0.0 and 1.0.")
                                .help("Sets the fg color.")
                                .takes_value(true))
                           .arg(Arg::with_name("skip")
@@ -93,10 +94,39 @@ pub fn get_args() -> Config {
         conf.is_persistent = false;
     }
 
-    if let Some(_val) = matches.get_one::<String>("color_by_name") {
-        panic!("NOT IMPLEMENTED");
-    } else if let Some(_val) = matches.get_one::<String>("color_by_code") {
-        panic!("NOT IMPLEMENTED");
+    if let Some(val) = matches.get_one::<String>("color_by_name") {
+        let c = if let Some(c) = palette::named::from_str(val.as_str()) {
+            c
+        } else {
+            dopanic!("I don't know about that color!");
+        };
+        let c = c.into_components();
+        conf.color = [
+            c.0 as f32 / 255.0,
+            c.1 as f32 / 255.0,
+            c.2 as f32 / 255.0,
+            1.0,
+        ];
+    } else if let Some(val) = matches.get_one::<String>("color_by_value") {
+        let mut c: String = val.split_whitespace().collect();
+        let mut temp_vec: Vec<f32> = Vec::new();
+        c = c.replace("[", "");
+        c = c.replace("]", "");
+        for sp in c.split(",") {
+            let temp_num = if let Ok(t) = sp.parse::<f32>() {
+                t
+            } else {
+                dopanic!("All the array memebers must be floating points between 0.0 and 1.0");
+            };
+            if temp_num < 0.0 || temp_num > 1.0 {
+                dopanic!("All the array memebers must be floating points between 0.0 and 1.0");
+            }
+            temp_vec.push(temp_num);
+        }
+        if temp_vec.len() != 3 {
+            dopanic!("Array's length must be equal to 3.")
+        }
+        conf.color = [temp_vec[0], temp_vec[1], temp_vec[2], 1.0];
     } else {
         conf.color = [
             rng.gen_range(0.0..=1.0),
@@ -122,7 +152,7 @@ pub fn get_args() -> Config {
             conf.kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
         } else if val.eq_ignore_ascii_case("custom") {
             match matches.get_one::<String>("ckernel") {
-                None => panic!("You must provide the custom kernel"),
+                None => dopanic!("You must provide the custom kernel"),
                 Some(ck) => {
                     let mut ck: String = ck.split_whitespace().collect();
                     let mut ckernel: [[f32; 3]; 3] = [[0.0; 3]; 3];
@@ -130,13 +160,14 @@ pub fn get_args() -> Config {
                     ck = ck.replace("[", "");
                     ck = ck.replace("]", "");
                     for sp in ck.split(",") {
-                        temp_vec.push(
-                            sp.parse()
-                                .expect("All the array members must be floating points."),
-                        );
+                        temp_vec.push(if let Ok(t) = sp.parse() {
+                            t
+                        } else {
+                            dopanic!("All the array members must be floating points.");
+                        });
                     }
                     if temp_vec.len() != 9 {
-                        panic!("Array's length must be equal to 9.")
+                        dopanic!("Array's length must be equal to 9.");
                     }
                     for (i, &s) in temp_vec.iter().enumerate() {
                         ckernel[i / 3][i % 3] = s;
@@ -145,16 +176,15 @@ pub fn get_args() -> Config {
                 }
             }
         } else {
-            panic!("unkown kernel");
+            dopanic!("unkown kernel");
         }
     } else {
         conf.kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
     }
 
-    //TODO: FIX BAD INPUT
     if let Some(width) = matches.get_one::<u32>("width") {
         if *width == 0 {
-            panic!("Width cannot be 0");
+            dopanic!("Width cannot be 0");
         }
         conf.width = *width;
     } else {
@@ -163,7 +193,7 @@ pub fn get_args() -> Config {
 
     if let Some(height) = matches.get_one::<u32>("height") {
         if *height == 0 {
-            panic!("Width cannot be 0");
+            dopanic!("Width cannot be 0");
         }
         conf.height = *height;
     } else {
@@ -172,7 +202,7 @@ pub fn get_args() -> Config {
 
     if let Some(skip) = matches.get_one::<u32>("skip") {
         if *skip == 0 {
-            panic!("Connot skip none");
+            dopanic!("Connot skip none");
         }
         conf.skip = *skip;
     } else {
@@ -258,7 +288,7 @@ pub fn get_args() -> Config {
 
     if let Some(fps) = matches.get_one::<f32>("fps") {
         if *fps <= 0.0 {
-            panic!("FPS cannot be 0 or negative.")
+            dopanic!("FPS cannot be 0 or negative.")
         }
         conf.fps = *fps;
     } else {

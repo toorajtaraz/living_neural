@@ -48,7 +48,7 @@ pub fn new_as_texture(
     let img_dimensions = img.dimensions();
     let img_raw =
         glium::texture::RawImage2d::from_raw_rgba_reversed(&img.into_raw(), img_dimensions);
-    glium::texture::SrgbTexture2d::new(display, img_raw).unwrap()
+    glium::texture::SrgbTexture2d::new(display, img_raw).unwrap_or_else(|err| dopanic!(err))
 }
 pub fn new_empty_texture(width: u32, height: u32, display: &glium::Display) -> glium::Texture2d {
     glium::Texture2d::empty_with_format(
@@ -58,5 +58,5 @@ pub fn new_empty_texture(width: u32, height: u32, display: &glium::Display) -> g
         width,
         height,
     )
-    .unwrap()
+    .unwrap_or_else(|err| dopanic!(err))
 }

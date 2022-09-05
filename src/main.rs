@@ -1,6 +1,13 @@
 #[macro_use]
 extern crate glium;
 
+macro_rules! dopanic {
+    ($err:expr) => {{
+        eprintln!("Error: {}", $err);
+        std::process::exit(1);
+    }};
+}
+
 mod buffer_initializer;
 mod cmd_handler;
 mod kernels;
@@ -50,7 +57,7 @@ fn main() {
         .with_inner_size(PhysicalSize::new(height, width))
         .with_resizable(false);
     let cb = glutin::ContextBuilder::new();
-    let display = glium::Display::new(wb, cb, &event_loop).unwrap();
+    let display = glium::Display::new(wb, cb, &event_loop).unwrap_or_else(|err| dopanic!(err));
 
     let points = vec![
         Vertex::new(-1.0, -1.0),
@@ -58,20 +65,21 @@ fn main() {
         Vertex::new(-1.0, 1.0),
         Vertex::new(1.0, 1.0),
     ];
-    let vertex_buffer = glium::VertexBuffer::new(&display, &points).unwrap();
+    let vertex_buffer =
+        glium::VertexBuffer::new(&display, &points).unwrap_or_else(|err| dopanic!(err));
     let indices = glium::IndexBuffer::new(
         &display,
         PrimitiveType::TrianglesList,
         &[0, 1, 2, 1, 2, 3u16],
     )
-    .unwrap();
+    .unwrap_or_else(|err| dopanic!(err));
     let program = glium::Program::from_source(
         &display,
         shaders::vertex::VERTEX_SRC,
         fragment_src.as_str(),
         None,
     )
-    .unwrap();
+    .unwrap_or_else(|err| dopanic!(err));
 
     let mut u_plane_base = buffer_initializer::new_as_texture(
         buffer_initializer::InitMode::RANDOM,
@@ -118,8 +126,8 @@ fn main() {
             },
             _ => return,
         }
-        let mut target_fb =
-            glium::framebuffer::SimpleFrameBuffer::new(&display, &dest_texture).unwrap();
+        let mut target_fb = glium::framebuffer::SimpleFrameBuffer::new(&display, &dest_texture)
+            .unwrap_or_else(|err| dopanic!(err));
         if is_first {
             let uniforms = uniform! {
                 u_kernel: kernel,
@@ -139,7 +147,7 @@ fn main() {
                     &uniforms,
                     &Default::default(),
                 )
-                .unwrap();
+                .unwrap_or_else(|err| dopanic!(err));
 
             target_fb.fill(
                 &dest_texture.as_surface(),
@@ -168,7 +176,7 @@ fn main() {
                             &uniforms,
                             &Default::default(),
                         )
-                        .unwrap();
+                        .unwrap_or_else(|err| dopanic!(err));
 
                     target_fb.fill(
                         &dest_texture.as_surface(),
@@ -186,9 +194,9 @@ fn main() {
                         &uniforms,
                         &Default::default(),
                     )
-                    .unwrap();
+                    .unwrap_or_else(|err| dopanic!(err));
 
-                target.finish().unwrap();
+                target.finish().unwrap_or_else(|err| dopanic!(err));
                 do_calc = true;
             }
         }

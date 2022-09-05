@@ -18,7 +18,7 @@ pub struct Config {
 
 pub fn get_args() -> Config {
     let matches = App::new(format!("Living Neural"))                       
-                          .version("\r0.1.0")
+                          .version("0.1.0")
                           .author("Tooraj Taraz <tooraj.info@gmail.com>")
                           .about("Living Neural implements a simple neural automata accelerated by OPENGL.")
                           .arg(Arg::with_name("width")
@@ -52,7 +52,7 @@ pub fn get_args() -> Config {
                                .short('K')
                                .long("ckernel")
                                .value_name("desired kernel array")
-                               .help("Value for custom kernel. It must be an array of length 9 and wrapped in qoutation marks. Example: '[1.0, 2.3, 0., 0.0, 0.0, 0.0, -1.23421, 8.0, 1.0]'")
+                               .help("Value for custom kernel. It must be an array of length 9 and wrapped in qoutation marks. Example: [1.0, 2.3, 0., 0.0, 0.0, 0.0, -1.23421, 8.0, 1.0]")
                                .requires("kernel")
                                .takes_value(true))
                           .arg(Arg::with_name("color_by_name")

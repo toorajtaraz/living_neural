@@ -2,22 +2,20 @@
 Living Neural implements the simplest form of a neural automata and renders the output using OpenGL.
 
 ## Examples
-
-
-
+```bash
+living_neural -w 600 -h 600 --activation worm --kernel worm --fps 0.58 --skip 3
+```
 https://user-images.githubusercontent.com/64916254/188502599-85b8ac44-6c79-40e8-ab13-981641a7f993.mp4
 
-
-
+```bash
+living_neural -w 600 -h 600 --activation tanh --kernel fiber --fps 0.58
+```
 https://user-images.githubusercontent.com/64916254/188502614-b27a3006-3a00-4dca-ab0d-527985ca68e8.mp4
 
-
-
-
+```bash
+living_neural -w 600 -h 600 --activation waves --kernel waves --fps 0.08
+```
 https://user-images.githubusercontent.com/64916254/188502618-62b8a63e-48a7-4a6d-87eb-7330ad988be6.mp4
-
-
-
 
 ## Usage
 ```bash
@@ -41,4 +39,15 @@ OPTIONS:
     -s, --skip <frames to skip>                                                                            Sets the number of frames to skip.
     -V, --version                                                                                          Print version information
     -w, --width <desired window width>                                                                     Sets initial window width, can be resized later. Must be 32 bit unsigned int and greater than 0.
+```
+
+### NOTE
+You can also provide your own activation function written in `glsl_v450`, just make sure to include a function name `activation` that gets a single float parameter and also returns a single float.
+```glsl
+int some_func() {
+  return 2;
+}
+float activation(float in) {
+  return -2.2341324/(0.89*sin(in)+1.234)+some_func();
+}		
 ```

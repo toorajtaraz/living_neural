@@ -48,6 +48,6 @@ int some_func() {
   return 2;
 }
 float activation(float in) {
-  return -2.2341324/(0.89*sin(in)+1.234)+some_func();
+  return -2.2341324/(0.89*sin(in)+1.234)+float(some_func());
 }		
 ```

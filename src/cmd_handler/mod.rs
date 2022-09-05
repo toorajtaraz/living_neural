@@ -45,7 +45,14 @@ pub fn get_args() -> Config {
                                .short('k')
                                .long("kernel")
                                .value_name("desired kernel name/mode")
-                               .help("Sets the kernel.")
+                               .help("Sets the kernel. It can be random, worm, fiber, waves, rule30, gameoflife or custom.")
+                               .takes_value(true))
+                          .arg(Arg::with_name("ckernel")
+                               .short('K')
+                               .long("ckernel")
+                               .value_name("desired kernel array")
+                               .help("Value for custom kernel. It must be an array of length 9 and wrapped in qoutation marks. Example: '[1.0, 2.3, 0., 0.0, 0.0, 0.0, -1.23421, 8.0, 1.0]'")
+                               .requires("kernel")
                                .takes_value(true))
                           .arg(Arg::with_name("color_by_name")
                                .short('c')
@@ -113,6 +120,30 @@ pub fn get_args() -> Config {
             conf.kernel = kernels::get_kernel(kernels::Kernel::GAMEOFLIFE, None);
         } else if val.eq_ignore_ascii_case("random") {
             conf.kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
+        } else if val.eq_ignore_ascii_case("custom") {
+            match matches.get_one::<String>("ckernel") {
+                None => panic!("You must provide the custom kernel"),
+                Some(ck) => {
+                    let mut ck: String = ck.split_whitespace().collect();
+                    let mut ckernel: [[f32; 3]; 3] = [[0.0; 3]; 3];
+                    let mut temp_vec: Vec<f32> = Vec::new();
+                    ck = ck.replace("[", "");
+                    ck = ck.replace("]", "");
+                    for sp in ck.split(",") {
+                        temp_vec.push(
+                            sp.parse()
+                                .expect("All the array members must be floating points."),
+                        );
+                    }
+                    if temp_vec.len() != 9 {
+                        panic!("Array's length must be equal to 9.")
+                    }
+                    for (i, &s) in temp_vec.iter().enumerate() {
+                        ckernel[i / 3][i % 3] = s;
+                    }
+                    conf.kernel = ckernel;
+                }
+            }
         } else {
             panic!("unkown kernel");
         }

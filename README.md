@@ -4,14 +4,18 @@ Living Neural implements the simplest form of a neural automata and renders the 
 ## Examples
 
 
-https://user-images.githubusercontent.com/64916254/188502278-0e4fa828-2ec1-4c89-848c-4a75c0cd84a3.mp4
 
-
-https://user-images.githubusercontent.com/64916254/188502305-d7a4bf24-de5a-4858-8a8a-14baaa49a0d6.mp4
+https://user-images.githubusercontent.com/64916254/188502599-85b8ac44-6c79-40e8-ab13-981641a7f993.mp4
 
 
 
-https://user-images.githubusercontent.com/64916254/188502320-76ff9169-94df-4325-aaaa-5cd904c3edcd.mp4
+https://user-images.githubusercontent.com/64916254/188502614-b27a3006-3a00-4dca-ab0d-527985ca68e8.mp4
+
+
+
+
+https://user-images.githubusercontent.com/64916254/188502618-62b8a63e-48a7-4a6d-87eb-7330ad988be6.mp4
+
 
 
 

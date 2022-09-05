@@ -3,6 +3,18 @@ Living Neural implements the simplest form of a neural automata and renders the 
 
 ## Examples
 
+
+https://user-images.githubusercontent.com/64916254/188502278-0e4fa828-2ec1-4c89-848c-4a75c0cd84a3.mp4
+
+
+https://user-images.githubusercontent.com/64916254/188502305-d7a4bf24-de5a-4858-8a8a-14baaa49a0d6.mp4
+
+
+
+https://user-images.githubusercontent.com/64916254/188502320-76ff9169-94df-4325-aaaa-5cd904c3edcd.mp4
+
+
+
 ## Usage
 ```bash
 Living Neural 0.1.0

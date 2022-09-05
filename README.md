@@ -51,3 +51,5 @@ float activation(float in) {
   return -2.2341324/(0.89*sin(in)+1.234)+float(some_func());
 }		
 ```
+### Credits
+This method of implementing a neural automata was inspired by MaxRobinsonTheGreat's [implementation](https://github.com/MaxRobinsonTheGreat/NeuralPatterns).

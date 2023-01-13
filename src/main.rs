@@ -70,7 +70,7 @@ fn main() {
     let indices = glium::IndexBuffer::new(
         &display,
         PrimitiveType::TrianglesList,
-        &[0, 1, 2, 1, 2, 3u16],
+        &[0, 1, 2, 3, 2, 1u16],
     )
     .unwrap_or_else(|err| dopanic!(err));
     let program = glium::Program::from_source(

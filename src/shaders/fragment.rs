@@ -96,6 +96,8 @@ const FRAGMENT_SRC: &'static str = r#"
     uniform vec2 u_single_pixel;
     uniform vec4 u_color_mask;
     uniform mat3 u_kernel;
+    uniform int u_kernel_height;
+    uniform int u_kernel_width;
     uniform sampler2D u_plane;
     uniform bool u_do_calc;
     uniform sampler2D u_plane_out;
@@ -110,17 +112,23 @@ const FRAGMENT_SRC: &'static str = r#"
         if (u_do_calc) {
 
             PERSISTENT_SRC
-
-            float conv_res_a =
-                      texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1.,-1.))).a * u_kernel[2][0]
-                    + texture(u_plane, get_point(v_text_points, vec2( 1., 0.))).a * u_kernel[0][1]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0., 0.))).a * u_kernel[1][1]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1., 0.))).a * u_kernel[2][1]
-                    + texture(u_plane, get_point(v_text_points, vec2( 1., 1.))).a * u_kernel[0][2]
-                    + texture(u_plane, get_point(v_text_points, vec2( 0., 1.))).a * u_kernel[1][2]
-                    + texture(u_plane, get_point(v_text_points, vec2(-1., 1.))).a * u_kernel[2][2];
+            float conv_res_a = 0.0;
+            for (int i = 0; i < u_kernel_height; i++) {
+                for (int j = 0; j < u_kernel_width; j++) {
+                    vec2 offset = vec2(-1. + j, -1. + i);
+                    conv_res_a += texture(u_plane, get_point(v_text_points, offset)).a * u_kernel[j][i];
+                }
+            }
+            //float conv_res_a =
+            //          texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
+            //        + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
+            //        + texture(u_plane, get_point(v_text_points, vec2(-1.,-1.))).a * u_kernel[2][0]
+            //        + texture(u_plane, get_point(v_text_points, vec2( 1., 0.))).a * u_kernel[0][1]
+            //        + texture(u_plane, get_point(v_text_points, vec2( 0., 0.))).a * u_kernel[1][1]
+            //        + texture(u_plane, get_point(v_text_points, vec2(-1., 0.))).a * u_kernel[2][1]
+            //        + texture(u_plane, get_point(v_text_points, vec2( 1., 1.))).a * u_kernel[0][2]
+            //        + texture(u_plane, get_point(v_text_points, vec2( 0., 1.))).a * u_kernel[1][2]
+            //        + texture(u_plane, get_point(v_text_points, vec2(-1., 1.))).a * u_kernel[2][2];
             float activated = activation(conv_res_a);
             color = vec4(activated, activated, activated, activated);
         } else {

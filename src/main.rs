@@ -131,6 +131,8 @@ fn main() {
         if is_first {
             let uniforms = uniform! {
                 u_kernel: kernel,
+                u_kernel_height: 3,
+                u_kernel_width: 3,
                 u_do_calc: do_calc,
                 u_color_mask: color,
                 u_single_pixel: single_pixel,
@@ -158,6 +160,8 @@ fn main() {
         } else {
             let uniforms = uniform! {
                 u_kernel: kernel,
+                u_kernel_height: 3,
+                u_kernel_width: 3,
                 u_do_calc: do_calc,
                 u_color_mask: color,
                 u_single_pixel: single_pixel,

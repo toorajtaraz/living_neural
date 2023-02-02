@@ -1,15 +1,42 @@
 use crate::kernels;
 use crate::shaders;
 use clap::{App, Arg};
+use glium::uniforms::UniformBuffer;
+use glium::uniforms::{AsUniformValue, UniformValue};
 use palette;
 use rand::prelude::*;
+
+pub const HEIGHT: usize = 3;
+pub const WIDTH: usize = 3;
+
+// We create a struct for the kernel containing a 2d array of floats
+// and then we use a macro to implement the UniformBlock trait for it
+// so that we can use it as a uniform in the shader.
+#[derive(Copy, Clone)]
+pub struct Kernel {
+    pub u_kernel: [[f32; HEIGHT]; WIDTH],
+}
+
+implement_uniform_block!(Kernel, u_kernel);
+
+
+fn convert_33_to_1515(kernel: [[f32; 3]; 3]) -> [[f32; HEIGHT]; WIDTH] {
+    let mut new_kernel = [[0.0f32; HEIGHT]; WIDTH];
+    // We put the kernel in the top left corner of the new kernel
+    for i in 0..3 {
+        for j in 0..3 {
+            new_kernel[i][j] = kernel[i][j];
+        }
+    }
+    new_kernel
+}
 
 #[derive(Default, Debug)]
 pub struct Config {
     pub width: u32,
     pub height: u32,
     pub fps: f32,
-    pub kernel: [[f32; 3]; 3],
+    pub kernel: [[f32; HEIGHT]; WIDTH],
     pub color: [f32; 4],
     pub skip: u32,
     pub fragment_src: String,
@@ -48,7 +75,7 @@ pub fn get_args() -> Config {
                                .value_name("desired kernel name/mode")
                                .help("Sets the kernel. It can be random, worm, fiber, waves, rule30, gameoflife or custom.")
                                .takes_value(true))
-                          .arg(Arg::with_name("ckernel")
+        .arg(Arg::with_name("ckernel")
                                .short('K')
                                .long("ckernel")
                                .value_name("desired kernel array")
@@ -139,23 +166,24 @@ pub fn get_args() -> Config {
     if let Some(val) = matches.get_one::<String>("kernel") {
         let val: String = val.split_whitespace().collect();
         if val.eq_ignore_ascii_case("worm") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::WORM, None);
+            conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::WORM, None));
         } else if val.eq_ignore_ascii_case("fiber") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::FIBER, None);
+            conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::FIBER, None));
         } else if val.eq_ignore_ascii_case("rule30") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::RULE30, None);
+            conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::RULE30, None));
         } else if val.eq_ignore_ascii_case("waves") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::WAVES, None);
+            conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::WAVES, None));
         } else if val.eq_ignore_ascii_case("gameoflife") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::GAMEOFLIFE, None);
+            conf.kernel =
+                convert_33_to_1515(kernels::get_kernel(kernels::Kernel::GAMEOFLIFE, None));
         } else if val.eq_ignore_ascii_case("random") {
-            conf.kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
+            conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::RANDOM, None));
         } else if val.eq_ignore_ascii_case("custom") {
             match matches.get_one::<String>("ckernel") {
                 None => dopanic!("You must provide the custom kernel"),
                 Some(ck) => {
                     let mut ck: String = ck.split_whitespace().collect();
-                    let mut ckernel: [[f32; 3]; 3] = [[0.0; 3]; 3];
+                    let mut ckernel = [[0.0 as f32; HEIGHT]; WIDTH];
                     let mut temp_vec: Vec<f32> = Vec::new();
                     ck = ck.replace("[", "");
                     ck = ck.replace("]", "");
@@ -166,8 +194,8 @@ pub fn get_args() -> Config {
                             dopanic!("All the array members must be floating points.");
                         });
                     }
-                    if temp_vec.len() != 9 {
-                        dopanic!("Array's length must be equal to 9.");
+                    if temp_vec.len() > (HEIGHT * WIDTH) {
+                        dopanic!("Array's length must be at most 32x32.");
                     }
                     for (i, &s) in temp_vec.iter().enumerate() {
                         ckernel[i / 3][i % 3] = s;
@@ -179,7 +207,7 @@ pub fn get_args() -> Config {
             dopanic!("unkown kernel");
         }
     } else {
-        conf.kernel = kernels::get_kernel(kernels::Kernel::RANDOM, None);
+        conf.kernel = convert_33_to_1515(kernels::get_kernel(kernels::Kernel::RANDOM, None));
     }
 
     if let Some(width) = matches.get_one::<u32>("width") {

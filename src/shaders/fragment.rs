@@ -92,10 +92,10 @@ const FRAGMENT_SRC: &'static str = r#"
     precision mediump float;
     in vec2 v_text_points;
     out vec4 color;
-
+        
+    uniform mat3 u_kernel;
     uniform vec2 u_single_pixel;
     uniform vec4 u_color_mask;
-    uniform mat3 u_kernel;
     uniform int u_kernel_height;
     uniform int u_kernel_width;
     uniform sampler2D u_plane;
@@ -114,12 +114,12 @@ const FRAGMENT_SRC: &'static str = r#"
             PERSISTENT_SRC
             float conv_res_a = 0.0;
             for (int i = 0; i < u_kernel_height; i++) {
-                for (int j = 0; j < u_kernel_width; j++) {
-                    vec2 offset = vec2(-1. + j, -1. + i);
-                    conv_res_a += texture(u_plane, get_point(v_text_points, offset)).a * u_kernel[j][i];
-                }
+               for (int j = 0; j < u_kernel_width; j++) {
+                   vec2 offset = vec2(j - u_kernel_width / 2, i - u_kernel_height / 2);
+                   conv_res_a += texture(u_plane, get_point(v_text_points, offset)).a * u_kernel[j][i];
+               }
             }
-            //float conv_res_a =
+            // float conv_res_a =
             //          texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
             //        + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
             //        + texture(u_plane, get_point(v_text_points, vec2(-1.,-1.))).a * u_kernel[2][0]
@@ -134,6 +134,14 @@ const FRAGMENT_SRC: &'static str = r#"
         } else {
             float x = texture(u_plane, v_text_points).a;
 			color = vec4(x, x, x, x) * u_color_mask;
+			// color = vec4(x, x, x, x);
+
+            //if (!(u_kernel[0] == 0.68 && u_kernel[1] < -0.8 && u_kernel[2] == 0.68 && u_kernel[32] < -0.8 && u_kernel[33] < -0.6 && u_kernel[34] < -0.8 && u_kernel[64] == 0.68 && u_kernel[65] < -0.8 && u_kernel[66] == 0.68)) {
+            // if (!(u_kernel[0][1] == -0.9)) {
+            //     color = vec4(1.0, 0.0, 0.0, 1.0);
+            // } else {
+            //     color = vec4(0.0, 1.0, 0.0, 1.0);
+            // }
         }
     }
 "#;

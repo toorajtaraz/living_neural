@@ -1,3 +1,5 @@
+use crate::cmd_handler::{HEIGHT, WIDTH};
+
 #[macro_use]
 extern crate glium;
 
@@ -36,14 +38,14 @@ fn main() {
     let width: u32;
     let height: u32;
     let fps: f32;
-    let kernel;
+    let kernel_2d;
     let color;
     let skip;
 
     width = conf.width;
     height = conf.height;
     fps = conf.fps;
-    kernel = conf.kernel;
+    kernel_2d = conf.kernel;
     color = conf.color;
     skip = conf.skip;
 
@@ -58,6 +60,18 @@ fn main() {
         .with_resizable(false);
     let cb = glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &event_loop).unwrap_or_else(|err| dopanic!(err));
+
+    // let mut kernel: glium::uniforms::UniformBuffer<cmd_handler::Kernel> =
+    //     glium::uniforms::UniformBuffer::empty(&display).unwrap();
+    // {
+    //     let mut kernel_temp = kernel.map();
+
+    //     for i in 0..3 {
+    //         for j in 0..3 {
+    //             kernel_temp.u_kernel[i][j] = kernel_2d[i][j];
+    //         }
+    //     }
+    // }
 
     let points = vec![
         Vertex::new(-1.0, -1.0),
@@ -130,7 +144,7 @@ fn main() {
             .unwrap_or_else(|err| dopanic!(err));
         if is_first {
             let uniforms = uniform! {
-                u_kernel: kernel,
+                u_kernel: kernel_2d,
                 u_kernel_height: 3,
                 u_kernel_width: 3,
                 u_do_calc: do_calc,
@@ -150,16 +164,18 @@ fn main() {
                     &Default::default(),
                 )
                 .unwrap_or_else(|err| dopanic!(err));
-
+            // let data = kernel.read().unwrap().u_kernel[0];
+            // println!("{}", data[0]);
             target_fb.fill(
                 &dest_texture.as_surface(),
                 glium::uniforms::MagnifySamplerFilter::Linear,
             );
+
             is_first = false;
             do_calc = false;
         } else {
             let uniforms = uniform! {
-                u_kernel: kernel,
+                u_kernel: kernel_2d,
                 u_kernel_height: 3,
                 u_kernel_width: 3,
                 u_do_calc: do_calc,
@@ -169,7 +185,6 @@ fn main() {
                             .sampled()
                             .wrap_function(glium::uniforms::SamplerWrapFunction::Repeat),
             };
-
             if do_calc {
                 for _ in 0..skip {
                     target_fb
@@ -182,6 +197,8 @@ fn main() {
                         )
                         .unwrap_or_else(|err| dopanic!(err));
 
+                    // let data = kernel.read().unwrap().u_kernel[0];
+                    // println!("{}", data[0]);
                     target_fb.fill(
                         &dest_texture.as_surface(),
                         glium::uniforms::MagnifySamplerFilter::Linear,

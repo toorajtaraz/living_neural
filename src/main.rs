@@ -59,18 +59,6 @@ fn main() {
     let cb = glutin::ContextBuilder::new();
     let display = glium::Display::new(wb, cb, &event_loop).unwrap_or_else(|err| dopanic!(err));
 
-    // let mut kernel: glium::uniforms::UniformBuffer<cmd_handler::Kernel> =
-    //     glium::uniforms::UniformBuffer::empty(&display).unwrap();
-    // {
-    //     let mut kernel_temp = kernel.map();
-
-    //     for i in 0..3 {
-    //         for j in 0..3 {
-    //             kernel_temp.u_kernel[i][j] = kernel_2d[i][j];
-    //         }
-    //     }
-    // }
-
     let points = vec![
         Vertex::new(-1.0, -1.0),
         Vertex::new(1.0, -1.0),

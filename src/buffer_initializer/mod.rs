@@ -1,19 +1,25 @@
 use glium;
 use image::{Rgba, RgbaImage};
 use rand::prelude::*;
+use rayon::{prelude::{ParallelIterator}, slice::ParallelSliceMut};
+
+
+const NUM_THREADS: usize = 12;
 
 pub fn new_random(width: u32, height: u32) -> RgbaImage {
-    let mut rng = rand::thread_rng();
-    let mut img = RgbaImage::new(width, height);
+    let size = (width * height * 4) as usize;
+    let mut buffer = vec![0 as u8; size];
 
-    for x in 0..width {
-        for y in 0..height {
-            let t = rng.gen::<u8>();
-            img.put_pixel(x, y, Rgba([t, t, t, t]));
-        }
-    }
-
-    img
+    // We use rayon library to parallelize the initialization
+    buffer.par_chunks_mut(size / NUM_THREADS).for_each_init(
+        || rand::thread_rng(),
+        |rng, chunk| {
+            for i in 0..chunk.len() {
+                chunk[i] = rng.gen::<u8>();
+            }
+        },
+    );
+    RgbaImage::from_raw(width, height, buffer).unwrap()
 }
 
 pub fn new_center_top(width: u32, height: u32) -> RgbaImage {

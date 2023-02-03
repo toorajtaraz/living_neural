@@ -1,5 +1,3 @@
-use crate::cmd_handler::{HEIGHT, WIDTH};
-
 #[macro_use]
 extern crate glium;
 

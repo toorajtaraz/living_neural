@@ -1,25 +1,13 @@
 use crate::kernels;
 use crate::shaders;
 use clap::{App, Arg};
-use glium::uniforms::UniformBuffer;
-use glium::uniforms::{AsUniformValue, UniformValue};
 use palette;
 use rand::prelude::*;
 
 pub const HEIGHT: usize = 3;
 pub const WIDTH: usize = 3;
 
-// We create a struct for the kernel containing a 2d array of floats
-// and then we use a macro to implement the UniformBlock trait for it
-// so that we can use it as a uniform in the shader.
-#[derive(Copy, Clone)]
-pub struct Kernel {
-    pub u_kernel: [[f32; HEIGHT]; WIDTH],
-}
-
-implement_uniform_block!(Kernel, u_kernel);
-
-
+#[inline(always)]
 fn convert_33_to_1515(kernel: [[f32; 3]; 3]) -> [[f32; HEIGHT]; WIDTH] {
     let mut new_kernel = [[0.0f32; HEIGHT]; WIDTH];
     // We put the kernel in the top left corner of the new kernel

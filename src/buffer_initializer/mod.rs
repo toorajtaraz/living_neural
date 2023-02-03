@@ -1,8 +1,7 @@
 use glium;
 use image::{Rgba, RgbaImage};
 use rand::prelude::*;
-use rayon::{prelude::{ParallelIterator}, slice::ParallelSliceMut};
-
+use rayon::{prelude::ParallelIterator, slice::ParallelSliceMut};
 
 const NUM_THREADS: usize = 12;
 
@@ -10,7 +9,6 @@ pub fn new_random(width: u32, height: u32) -> RgbaImage {
     let size = (width * height * 4) as usize;
     let mut buffer = vec![0 as u8; size];
 
-    // We use rayon library to parallelize the initialization
     buffer.par_chunks_mut(size / NUM_THREADS).for_each_init(
         || rand::thread_rng(),
         |rng, chunk| {

@@ -119,29 +119,12 @@ const FRAGMENT_SRC: &'static str = r#"
                    conv_res_a += texture(u_plane, get_point(v_text_points, offset)).a * u_kernel[j][i];
                }
             }
-            // float conv_res_a =
-            //          texture(u_plane, get_point(v_text_points, vec2( 1.,-1.))).a * u_kernel[0][0]
-            //        + texture(u_plane, get_point(v_text_points, vec2( 0.,-1.))).a * u_kernel[1][0]
-            //        + texture(u_plane, get_point(v_text_points, vec2(-1.,-1.))).a * u_kernel[2][0]
-            //        + texture(u_plane, get_point(v_text_points, vec2( 1., 0.))).a * u_kernel[0][1]
-            //        + texture(u_plane, get_point(v_text_points, vec2( 0., 0.))).a * u_kernel[1][1]
-            //        + texture(u_plane, get_point(v_text_points, vec2(-1., 0.))).a * u_kernel[2][1]
-            //        + texture(u_plane, get_point(v_text_points, vec2( 1., 1.))).a * u_kernel[0][2]
-            //        + texture(u_plane, get_point(v_text_points, vec2( 0., 1.))).a * u_kernel[1][2]
-            //        + texture(u_plane, get_point(v_text_points, vec2(-1., 1.))).a * u_kernel[2][2];
+
             float activated = activation(conv_res_a);
             color = vec4(activated, activated, activated, activated);
         } else {
             float x = texture(u_plane, v_text_points).a;
 			color = vec4(x, x, x, x) * u_color_mask;
-			// color = vec4(x, x, x, x);
-
-            //if (!(u_kernel[0] == 0.68 && u_kernel[1] < -0.8 && u_kernel[2] == 0.68 && u_kernel[32] < -0.8 && u_kernel[33] < -0.6 && u_kernel[34] < -0.8 && u_kernel[64] == 0.68 && u_kernel[65] < -0.8 && u_kernel[66] == 0.68)) {
-            // if (!(u_kernel[0][1] == -0.9)) {
-            //     color = vec4(1.0, 0.0, 0.0, 1.0);
-            // } else {
-            //     color = vec4(0.0, 1.0, 0.0, 1.0);
-            // }
         }
     }
 "#;

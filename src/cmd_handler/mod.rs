@@ -10,7 +10,6 @@ pub const WIDTH: usize = 3;
 #[inline(always)]
 fn convert_33_to_1515(kernel: [[f32; 3]; 3]) -> [[f32; HEIGHT]; WIDTH] {
     let mut new_kernel = [[0.0f32; HEIGHT]; WIDTH];
-    // We put the kernel in the top left corner of the new kernel
     for i in 0..3 {
         for j in 0..3 {
             new_kernel[i][j] = kernel[i][j];

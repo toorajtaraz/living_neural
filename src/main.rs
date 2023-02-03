@@ -150,8 +150,6 @@ fn main() {
                     &Default::default(),
                 )
                 .unwrap_or_else(|err| dopanic!(err));
-            // let data = kernel.read().unwrap().u_kernel[0];
-            // println!("{}", data[0]);
             target_fb.fill(
                 &dest_texture.as_surface(),
                 glium::uniforms::MagnifySamplerFilter::Linear,
@@ -183,8 +181,6 @@ fn main() {
                         )
                         .unwrap_or_else(|err| dopanic!(err));
 
-                    // let data = kernel.read().unwrap().u_kernel[0];
-                    // println!("{}", data[0]);
                     target_fb.fill(
                         &dest_texture.as_surface(),
                         glium::uniforms::MagnifySamplerFilter::Linear,

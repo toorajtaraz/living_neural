@@ -7,9 +7,15 @@ edition = "2021"
 
 [dependencies]
 clap = { version = "3.2.20", features = ["derive"] }
+cpal = "0.15.2"
+dasp = "0.11.0"
+dsp = "0.10.2"
+fon = "0.6.0"
 glium = "0.32.1"
 image = "0.24.3"
 palette = "0.6.1"
 pallete = "1.1.0"
+portaudio = "0.7.0"
 rand = "0.8.5"
 rayon = "1.5.3"
+twang = "0.9.0"

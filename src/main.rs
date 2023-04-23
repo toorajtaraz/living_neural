@@ -1,3 +1,7 @@
+use glium::{texture::{Texture2dMultisample, Texture2dDataSink, RawImage2d}, Texture2d};
+
+use crate::audio_processing::{generate_difference::generate_difference, generate_audio};
+
 #[macro_use]
 extern crate glium;
 
@@ -12,6 +16,7 @@ mod buffer_initializer;
 mod cmd_handler;
 mod kernels;
 mod shaders;
+mod audio_processing;
 
 #[derive(Copy, Clone)]
 struct Vertex {
@@ -170,6 +175,7 @@ fn main() {
                             .wrap_function(glium::uniforms::SamplerWrapFunction::Repeat),
             };
             if do_calc {
+                let dest_before: RawImage2d<u8> = dest_texture.read();
                 for _ in 0..skip {
                     target_fb
                         .draw(
@@ -186,6 +192,10 @@ fn main() {
                         glium::uniforms::MagnifySamplerFilter::Linear,
                     );
                 }
+                let dest_after: RawImage2d<u8> = dest_texture.read();
+                let info = generate_difference(dest_before, dest_after);
+                generate_audio::generate_audio(20, "test.wav".to_string(), info);
+                // dopanic!("test");
                 do_calc = false;
             } else {
                 let mut target = display.draw();

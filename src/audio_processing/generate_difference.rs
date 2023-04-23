@@ -1,10 +1,15 @@
 use glium::texture::RawImage2d;
 
 pub struct ExtractedInformationFromBuffers {
-    pub difference: Vec<Vec<i16>>,
+    pub difference: Vec<Vec<usize>>,
     pub buffer_one: Vec<Vec<u8>>,
     pub buffer_two: Vec<Vec<u8>>,
+    pub width: u32,
+    pub height: u32,
 }
+
+const MIN_DIFF: usize = 48_000 / 8;
+const MAX_DIFF: usize = 48_000;
 
 pub fn generate_difference(
     buffer_one: RawImage2d<u8>,
@@ -29,9 +34,24 @@ pub fn generate_difference(
         buff_two.push(row_two);
         diff_buff.push(diff_row);
     }
+    let min_diff = diff_buff.iter().flatten().min().unwrap().to_owned();
+    let max_diff = diff_buff.iter().flatten().max().unwrap().to_owned();
+    let mut diff_buff_reranged = Vec::new();
+    for row in diff_buff {
+        let mut temp = Vec::new();
+        for pixel in row {
+            let temp_pixel = (pixel - min_diff) as f32 / (max_diff - min_diff) as f32;
+            let temp_pixel = temp_pixel * (MAX_DIFF - MIN_DIFF) as f32 + MIN_DIFF as f32;
+            let ceiled_pixel = temp_pixel.ceil() as usize;
+            temp.push(ceiled_pixel);
+        }
+        diff_buff_reranged.push(temp);
+    }
     ExtractedInformationFromBuffers {
-        difference: diff_buff,
+        difference: diff_buff_reranged,
         buffer_one: buff_one,
         buffer_two: buff_two,
+        width: x,
+        height: y,
     }
 }

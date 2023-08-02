@@ -21,6 +21,81 @@ for note_range in range(12):
 # print(chords)
 base_str = base_str.replace(len_to_be_replaced, str(len(chords)))
 
+chord_types = set()
+for chord_type in m21.harmony.CHORD_TYPES:
+    chord_types.add(chord_type)
+
+# print(chord_types)
+# Get the theory behind the chord types
+# Importing the music21 chord module
+import music21.chord as chord
+import re
+
+rust_struct_syntax_chord_types = []
+rust_struct_chord_types = []
+
+for chord_type in chord_types:
+    # we want to convert the chord type to a rust struct syntax
+    # for example: "major" -> "Major"
+    # for example: "minor" -> "Minor"
+    # for example: "something_something" -> "SomethingSomething"
+    # for example: "something_something_else" -> "SomethingSomethingElse"
+    # ...
+    rust_str = ""
+    # we want to split with space and - and _ and then capitalize each word
+    words = re.split(" |-|_", chord_type)
+    for word in words:
+        rust_str += word.capitalize()
+    rust_struct_chord_types.append(rust_str)
+    rust_struct_str = "pub struct " + rust_str + " {" + "}"
+    rust_struct_syntax_chord_types.append(rust_struct_str)
+
+print(rust_struct_syntax_chord_types)
+rust_struct_syntax_chord_types = sorted(rust_struct_syntax_chord_types)
+for rssct in rust_struct_syntax_chord_types:
+    print(rssct)
+    print()
+    
+print("pub enum ChordType {")
+for rsct in rust_struct_chord_types:
+    print(f"    {rsct}({rsct}),")
+print("}")
+
+
+
+# Now I want to generate the impl part that creates a new chord
+# It must take three arguments, the root and the octave, and the chord type
+# We must match the chord type and then create the chord
+# We must return the chord
+print("impl Chord {")
+print("    pub fn new(root: Note, octave: u8, chord_type: ChordType) -> Chord {")
+print("        match chord_type {")
+for rsct in rust_struct_chord_types:
+    print(f"            ChordType::{rsct} => {rsct}::new(root, octave),")
+print("        }")
+print("    }")
+
+print("pub trait ChordBuilder {")
+print("    fn new(root: Note, octave: u8) -> Chord;")
+print("}")
+
+for rsct in rust_struct_chord_types:
+    print(f"pub impl ChordBuilder for {rsct}" + "{")
+    print(f"    fn new(root: Note, octave: u8) -> Chord" + "{")
+    if rsct == 'Augmented':
+        print("        let mut chord = Chord::new(root, octave, ChordType::Major);")
+        print("        chord.add_interval(Interval::AugmentedFifth);")
+        print("        chord")
+    elif rsct == 'Augmented11th':
+        print("        let mut chord = Chord::new(root, octave, ChordType::Major);")
+        print("        chord.add_interval(Interval::AugmentedFifth);")
+        print("        chord.add_interval(Interval::Perfect11th);")
+        print("        chord")
+
+
+for rsct in rust_struct_chord_types:
+    print(rsct)
+
 
 set_of_lengths = set()
 for chord_name, chord_freqs in chords:
@@ -39,5 +114,5 @@ for chord_name, chord_freqs in chords:
     base_str += "]);"
 
 # base_str += "];"
-print(base_str)
+# print(base_str)
 # print(set_of_lengths)
